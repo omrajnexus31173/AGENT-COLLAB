@@ -1,0 +1,53 @@
+# Production-oriented local composition. Set secrets in .env.local and run:
+# docker compose --env-file .env.local up --build
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nexus
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local}
+    volumes:
+      - nexus_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    volumes:
+      - .:/workspace:ro
+    environment:
+      DATABASE_URL: postgresql://nexus:${POSTGRES_PASSWORD}@db:5432/nexus
+    # Copy only migration inputs, never host node_modules, .data, or .env secrets.
+    command: >-
+      sh -c "mkdir -p scripts migrations src/lib/server &&
+      cp /workspace/package.json /workspace/package-lock.json /app/ &&
+      cp /workspace/scripts/migrate.ts scripts/ &&
+      cp /workspace/migrations/*.sql migrations/ &&
+      cp /workspace/src/lib/server/db.ts src/lib/server/ &&
+      npm ci --ignore-scripts && npm run db:migrate"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATABASE_URL: postgresql://nexus:${POSTGRES_PASSWORD}@db:5432/nexus
+      CREDENTIAL_ENCRYPTION_KEY: ${CREDENTIAL_ENCRYPTION_KEY:?Set CREDENTIAL_ENCRYPTION_KEY in .env.local}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      ALLOW_LOCAL_PROVIDERS: "false"
+      PROVIDER_ORIGIN_ALLOWLIST: ${PROVIDER_ORIGIN_ALLOWLIST:-}
+      TRUST_PROXY: "false"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+volumes:
+  nexus_pg:

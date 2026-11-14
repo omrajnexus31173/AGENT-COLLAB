@@ -1,0 +1,64 @@
+{
+  "name": "nexus-arcade",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One Universe. Multiple Minds. Infinite Possibilities.",
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0 --port 3000",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0 --port 3000",
+    "worker": "node --env-file-if-exists=.env.local --import tsx scripts/worker.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:live": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.live.config.mts",
+    "test:e2e": "node scripts/e2e.mjs",
+    "test:e2e:workflow": "node scripts/e2e.mjs --config playwright.workflow.config.ts",
+    "db:start": "node scripts/local-db.mjs",
+    "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/migrate.ts",
+    "db:check": "node --env-file-if-exists=.env.local --import tsx scripts/check-db.ts",
+    "setup": "node scripts/setup.mjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/*.{ts,mjs}\" \"*.mts\" --single-quote --trailing-comma all --print-width 110"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/space-grotesk": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@react-three/fiber": "9.8.2",
+    "lucide-react": "1.73.0",
+    "motion": "14.14.0",
+    "next": "16.4.6",
+    "pg": "^8.16.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "three": "0.187.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@sparticuz/chromium": "153.0.0",
+    "@types/node": "^22.19.0",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "0.187.0",
+    "embedded-postgres": "17.6.0-beta.15",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "16.4.6",
+    "prettier": "3.10.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "5.1.0"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
