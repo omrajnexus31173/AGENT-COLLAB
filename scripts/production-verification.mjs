@@ -4,10 +4,10 @@ import { writeFileSync } from 'node:fs';
 
 const base = 'https://nexus-agent-collab.vercel.app';
 const evidence = { base, startedAt: new Date().toISOString(), checks: [] };
-const record = (name, ok, details = {}) => {
+const record = (name, ok, details = {}, stop = true) => {
   evidence.checks.push({ name, ok, ...details });
   console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`);
-  if (!ok) throw new Error(name);
+  if (!ok && stop) throw new Error(name);
 };
 const json = async (path, options = {}) => {
   const response = await fetch(base + path, { ...options, signal: AbortSignal.timeout(30000) });
@@ -35,8 +35,6 @@ let csrf = '';
 let userId = '';
 let browser;
 try {
-  // Wait for the explicitly promoted production deployment before testing it.
-  await new Promise(resolve => setTimeout(resolve, 120000));
   const health = await json('/api/health');
   record('database health', health.response.status === 200 && health.body.status === 'ok', { status: health.response.status });
 
@@ -87,6 +85,8 @@ try {
   const page = await context.newPage();
   const pageErrors = [];
   const consoleErrors = [];
+  const failedResponses = [];
+  page.on('response', async (r) => { if (r.status() >= 400) { let detail = ''; try { const t = await r.text(); detail = t.startsWith('{') ? t.slice(0, 300) : (t.match(/<title>([^<]*)<\/title>/)?.[1] || t.match(/digest&quot;:&quot;([^&]+)/)?.[1] || ''); } catch {} failedResponses.push({ url: new URL(r.url()).pathname + new URL(r.url()).search, status: r.status(), detail }); } });
   page.on('pageerror', (e) => pageErrors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   await page.goto(base + '/', { waitUntil: 'networkidle' });
@@ -97,15 +97,16 @@ try {
   await page.getByRole('button', { name: 'Aegis', exact: true }).click();
   await page.waitForTimeout(300);
   record('3D node interaction', (await page.locator('.core-label strong').textContent())?.includes('Aegis'));
-  record('landing has no browser errors', pageErrors.length === 0 && consoleErrors.length === 0, { pageErrors, consoleErrors });
+  record('landing has no browser errors', pageErrors.length === 0 && consoleErrors.length === 0, { pageErrors, consoleErrors, failedResponses }, false);
 
   await context.addCookies([{ name: 'nexus.session', value: cookie.split('=')[1], domain: 'nexus-agent-collab.vercel.app', path: '/', httpOnly: true, secure: true, sameSite: 'Lax' }]);
   await page.goto(base + '/dashboard', { waitUntil: 'networkidle' });
   record('browser dashboard auto-login', page.url().endsWith('/dashboard') && await page.getByRole('heading', { name: 'Welcome to the nexus.' }).isVisible());
   await page.reload({ waitUntil: 'networkidle' });
   record('browser refresh persistence', await page.getByRole('heading', { name: 'Welcome to the nexus.' }).isVisible());
-  await page.goto(base + '/connections', { waitUntil: 'networkidle' });
-  record('protected browser route', await page.getByRole('heading', { name: 'Connection center', exact: true }).isVisible());
+  const connectionsResponse = await page.goto(base + '/connections', { waitUntil: 'networkidle' });
+  const connectionHeading = await page.getByRole('heading', { name: 'Connection center', exact: true }).waitFor({ timeout: 10000 }).then(() => true).catch(() => false);
+  record('protected browser route', connectionHeading, { url: page.url(), status: connectionsResponse?.status(), headings: await page.locator('h1,h2').allTextContents(), failedResponses }, false);
   await page.goto(base + '/profile', { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page.waitForURL(base + '/');
@@ -123,7 +124,7 @@ try {
   const loginSession = await context.cookies();
   record('login session cookie', loginSession.some((c) => c.name === 'nexus.session' && c.httpOnly && c.secure && c.sameSite === 'Lax'));
   record('authenticated browser has no page errors', pageErrors.length === 0, { pageErrors });
-  evidence.ok = true;
+  evidence.ok = evidence.checks.every((c) => c.ok);
 } catch (error) {
   evidence.ok = false;
   evidence.error = error instanceof Error ? error.message : String(error);
