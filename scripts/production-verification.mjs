@@ -35,6 +35,8 @@ let csrf = '';
 let userId = '';
 let browser;
 try {
+  // Wait for the explicitly promoted production deployment before testing it.
+  await new Promise(resolve => setTimeout(resolve, 120000));
   const health = await json('/api/health');
   record('database health', health.response.status === 200 && health.body.status === 'ok', { status: health.response.status });
 
