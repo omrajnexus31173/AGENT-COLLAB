@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [arena/187a72ae-agent-collab]
-    paths: ['.github/workflows/production-verification.yml']
+    paths: ['.github/workflows/production-verification.yml', 'scripts/production-verification.mjs']
 permissions:
   contents: write
 jobs:

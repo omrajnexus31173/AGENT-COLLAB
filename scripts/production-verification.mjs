@@ -40,7 +40,7 @@ try {
 
   const favicon = await fetch(base + '/favicon.ico', { signal: AbortSignal.timeout(20000) });
   const faviconBytes = Buffer.from(await favicon.arrayBuffer());
-  record('favicon', favicon.status === 200 && favicon.headers.get('content-type')?.includes('image/x-icon') && faviconBytes.readUInt16LE(2) === 1, { status: favicon.status, bytes: faviconBytes.length });
+  record('favicon', favicon.status === 200 && /image\/(x-icon|vnd.microsoft.icon)/.test(favicon.headers.get('content-type') || '') && faviconBytes.readUInt16LE(2) === 1, { status: favicon.status, bytes: faviconBytes.length });
 
   const invalid = await post('/api/auth/signup', { name: 'A', email: 'bad', password: 'short' });
   record('invalid signup rejected', invalid.response.status === 422 && invalid.body.code === 'VALIDATION_ERROR', { status: invalid.response.status, code: invalid.body.code });
