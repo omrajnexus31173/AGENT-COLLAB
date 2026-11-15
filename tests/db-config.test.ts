@@ -19,6 +19,8 @@ describe('managed PostgreSQL TLS configuration', () => {
     expect(parsed.host).toBe('aws-1-us-east-1.pooler.supabase.com');
     expect(parsed.user).toBe('user');
     expect(parsed.database).toBe('postgres');
+    expect(options.max).toBeLessThanOrEqual(5);
+    expect(options.idleTimeoutMillis).toBeLessThanOrEqual(10000);
   });
   it('does not enable TLS for a plain local connection unless explicitly requested', () => {
     vi.stubEnv('DATABASE_SSL', 'false');

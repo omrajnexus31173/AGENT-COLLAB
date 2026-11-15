@@ -25,9 +25,11 @@ export function poolOptions(connectionString: string) {
     : undefined;
   return {
     connectionString: url.toString(),
-    max: 12,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 8000,
+    // Serverless instances each own a pool. Keep it small and use Supabase's
+    // transaction pooler so concurrent lambdas do not exhaust session clients.
+    max: 5,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
     ssl,
     application_name: 'nexus-arcade',
   };
