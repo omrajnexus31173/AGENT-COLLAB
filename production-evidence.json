@@ -1,18 +1,118 @@
 {
   "base": "https://nexus-agent-collab.vercel.app",
-  "startedAt": "2026-11-15T18:50:18.241Z",
+  "startedAt": "2026-11-15T18:53:00.405Z",
   "checks": [
     {
       "name": "database health",
-      "ok": false,
-      "status": 503
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "favicon",
+      "ok": true,
+      "status": 200,
+      "bytes": 13008
+    },
+    {
+      "name": "invalid signup rejected",
+      "ok": true,
+      "status": 422,
+      "code": "VALIDATION_ERROR"
+    },
+    {
+      "name": "cross-origin signup rejected",
+      "ok": true,
+      "status": 403,
+      "code": "ORIGIN_REJECTED"
+    },
+    {
+      "name": "real production signup",
+      "ok": true,
+      "status": 201,
+      "requestId": "iad1::iad1::llmmx-1794768901763-351d0158e0c8",
+      "cookieFlags": {
+        "httpOnly": true,
+        "secure": true,
+        "sameSiteLax": true,
+        "path": true
+      }
+    },
+    {
+      "name": "duplicate email rejected",
+      "ok": true,
+      "status": 409,
+      "code": "CONFLICT"
+    },
+    {
+      "name": "signup session created",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "protected dashboard API",
+      "ok": true,
+      "status": 200,
+      "agents": 6
+    },
+    {
+      "name": "protected agents API",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "missing CSRF rejected",
+      "ok": true,
+      "status": 403,
+      "code": "CSRF_REJECTED"
+    },
+    {
+      "name": "CSRF-protected mutation",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "unauthenticated protected API rejected",
+      "ok": true,
+      "status": 401
+    },
+    {
+      "name": "3D scene renders",
+      "ok": true,
+      "canvasCount": 1,
+      "concept": "INTERACTIVE CONCEPT · NOT LIVE AGENT STATUS"
+    },
+    {
+      "name": "3D node interaction",
+      "ok": true
+    },
+    {
+      "name": "landing has no browser errors",
+      "ok": true,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ]
+    },
+    {
+      "name": "browser dashboard auto-login",
+      "ok": true
+    },
+    {
+      "name": "browser refresh persistence",
+      "ok": true
+    },
+    {
+      "name": "protected browser route",
+      "ok": false
     }
   ],
   "ok": false,
-  "error": "database health",
-  "finishedAt": "2026-11-15T18:50:18.697Z",
+  "error": "protected browser route",
+  "finishedAt": "2026-11-15T18:55:13.807Z",
   "testAccount": {
-    "email": "nexus-verification-1794768618241-4e476495@example.com",
-    "userId": ""
+    "email": "nexus-verification-1794768780405-d3619b41@example.com",
+    "userId": "f00a84aa-2018-46ea-a802-086427cba432"
   }
 }
