@@ -1,6 +1,6 @@
 {
   "base": "https://nexus-agent-collab.vercel.app",
-  "startedAt": "2026-11-15T19:00:51.179Z",
+  "startedAt": "2026-11-15T19:02:27.996Z",
   "checks": [
     {
       "name": "database health",
@@ -29,7 +29,7 @@
       "name": "real production signup",
       "ok": true,
       "status": 201,
-      "requestId": "iad1::iad1::n4h5l-1794769251874-975aa835a5db",
+      "requestId": "iad1::iad1::lm4ml-1794769348493-f6c9ef18d170",
       "cookieFlags": {
         "httpOnly": true,
         "secure": true,
@@ -123,14 +123,35 @@
     },
     {
       "name": "browser login",
-      "ok": false
+      "ok": true,
+      "url": "https://nexus-agent-collab.vercel.app/dashboard",
+      "apiStatus": 200,
+      "headings": [
+        "Welcome to the nexus.",
+        "What will you buildwith your squad?",
+        "Recent missions",
+        "Choose your collaboration mode",
+        "Mission activity",
+        "Your starting squad"
+      ],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedResponses": []
+    },
+    {
+      "name": "login session cookie",
+      "ok": true
+    },
+    {
+      "name": "authenticated browser has no page errors",
+      "ok": true,
+      "pageErrors": []
     }
   ],
-  "ok": false,
-  "error": "browser login",
-  "finishedAt": "2026-11-15T19:01:08.349Z",
+  "ok": true,
+  "finishedAt": "2026-11-15T19:02:42.435Z",
   "testAccount": {
-    "email": "nexus-verification-1794769251179-d766f9d0@example.com",
-    "userId": "f9339dd0-8313-4f0d-9b0b-1eb8e28423b1"
+    "email": "nexus-verification-1794769347996-40890189@example.com",
+    "userId": "1dc9f06c-98f9-4cde-acdc-66cb4a42a6d6"
   }
 }
