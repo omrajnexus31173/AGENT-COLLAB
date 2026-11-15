@@ -41,7 +41,7 @@ See [`.env.example`](.env.example). Important settings:
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_URL` | PostgreSQL connection string. On Vercel/serverless, use the Supabase **transaction pooler** (port `6543`) with `sslmode=verify-full`; keep the pool small. |
 | `CREDENTIAL_ENCRYPTION_KEY` | Base64-encoded **32-byte** key; back it up securely. Rotation requires re-encrypting stored credentials. |
 | `APP_ORIGIN` | Canonical browser origin. Use the exact public HTTPS origin in production, without a trailing slash. |
 | `TRUST_PROXY` | Enable only behind a proxy that overwrites forwarded client-IP headers. |
@@ -160,7 +160,21 @@ Compose runs PostgreSQL, a one-shot migration job, and the app. It binds the pub
 
 A normal Vercel request lifecycle is not a durable mission worker. Do not deploy the UI to an ephemeral function and assume queued missions will finish. Use an always-on Node host for this architecture, or set `NEXUS_DISABLE_WORKER=true` on the web tier and run `npm run worker` as a separately supervised long-running service with the same database and encryption key. The worker entry point validates database connectivity and handles SIGINT/SIGTERM. SSE also requires a host/proxy that supports long-lived, unbuffered responses. Supabase/managed PostgreSQL can supply the database; apply the SQL migrations and use verified TLS.
 
-No cloud project, deployment, paid resource, or external account was created during this build.
+### Current Vercel production deployment
+
+The public production origin is **https://nexus-agent-collab.vercel.app**. It uses a dedicated Supabase project (`Nexus Arcade`, ref `xguxwwztdswaapjkoafn`, us-east-1, free tier) and Vercel production environment variables only:
+
+- `APP_ORIGIN=https://nexus-agent-collab.vercel.app`
+- `DATABASE_URL`: Supabase shared **transaction** pooler, port `6543`, user `postgres.<project-ref>`, `sslmode=verify-full`
+- `DATABASE_CA_CERT`: Supabase Root 2021 CA PEM used for verified TLS
+- `CREDENTIAL_ENCRYPTION_KEY`: sensitive 32-byte base64 key
+- `TRUST_PROXY=true` (Vercel overwrites `X-Forwarded-For` at the edge)
+- `NEXUS_DISABLE_WORKER=true` (serverless web tier; run a separate supervised worker for missions)
+- `ALLOW_LOCAL_PROVIDERS=false`
+
+The original production signup `403` was caused by a missing `APP_ORIGIN`, not by disabled CSRF or a frontend workaround. The fix preserved the exact-origin allowlist and CSRF checks. Database connectivity also required the correct pooler tenant host, verified TLS CA handling, and transaction-mode pooling so concurrent serverless instances do not exhaust session-mode clients.
+
+A real production signup, duplicate-email rejection, invalid-input rejection, cross-origin rejection, session creation, protected APIs, dashboard auto-login, refresh persistence, protected route navigation, logout/revocation, and browser login were verified against the public origin using Chromium in GitHub Actions. The temporary diagnostic/verification workflows and evidence files were removed after the run; the sanitized result is recorded in `ENGINEERING_REPORT.md`.
 
 ## Security boundaries
 

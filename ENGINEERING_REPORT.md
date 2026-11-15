@@ -10,6 +10,83 @@ Implemented a full-stack multi-AI collaboration platform with a durable PostgreS
 
 **Release qualification: suitable for operator-run live acceptance testing, not a claim that live AI integrations are verified.** No real provider credentials were available. Offline tests use explicitly labeled protocol fixtures only. Application code has no fixture fallback and never fabricates model responses, verification, scores, or completion.
 
+## Production signup incident addendum — 2026-11-15
+
+Branch: `arena/187a72ae-agent-collab`\
+Public origin: `https://nexus-agent-collab.vercel.app`\
+Verified production deployment: `dpl_D5QsZ5hwjZK7tSorRxABmM5vdHAf` (commit `8dc89da`, target `production`, READY/PROMOTED, canonical alias assigned)
+
+### Exact root cause
+
+The original `POST /api/auth/signup → 403` was returned by the application, not by Vercel auth or a generic platform block. The captured response body was:
+
+```json
+{"error":"This origin is not allowed. Check APP_ORIGIN.","code":"ORIGIN_REJECTED"}
+```
+
+The production deployment had **no environment variables**. `assertOrigin()` in `src/lib/server/http.ts` fails closed in production when `APP_ORIGIN` is unset, so every signup was rejected. `/api/health` separately returned `503` because `DATABASE_URL` was also missing.
+
+### Smallest safe fix
+
+- Provisioned a **new dedicated Supabase project** for Nexus Arcade (`xguxwwztdswaapjkoafn`), rather than restoring/repurposing NEXUS EDUVERSE.
+- Applied migrations `001_initial.sql`, `002_session_csrf.sql`, and `003_supabase_api_lockdown.sql`; verified 15 tables, 34 indexes, RLS enabled on all public app tables, and no `anon`/`authenticated` table grants.
+- Set production-only Vercel env vars: `APP_ORIGIN`, `DATABASE_URL`, `DATABASE_CA_CERT`, `CREDENTIAL_ENCRYPTION_KEY`, `TRUST_PROXY=true`, `NEXUS_DISABLE_WORKER=true`, `ALLOW_LOCAL_PROVIDERS=false`. No secret values are recorded here.
+- Corrected the managed database path to the verified Supabase pooler tenant host and switched the serverless web tier to the **transaction pooler** (`6543`) after session-mode client exhaustion caused intermittent `500`s.
+- Fixed `pg` TLS option precedence in `src/lib/server/db.ts`: URL `sslmode` parameters no longer silently replace the explicit verified `ssl` object/CA. Added `tests/db-config.test.ts`.
+- Bounded each serverless pool to `max: 5`, `idleTimeoutMillis: 10000`, `connectionTimeoutMillis: 10000`.
+- Added valid `public/favicon.ico` and `public/icon.png`, plus layout icon metadata.
+- Replaced the app-owned deprecated `THREE.Clock` usage with `THREE.Timer` in `src/components/nexus-scene.tsx` (three `0.187.0`). React Three Fiber's internal clock was left untouched because it is dependency-owned.
+- Did **not** disable authentication, remove CSRF/origin checks, allow arbitrary origins, bypass rate limits, hardcode signup, or hide the error in the frontend.
+
+### Production verification actually executed
+
+External Chromium verification ran in GitHub Actions against the public production origin because the sandbox could not POST to Vercel directly and local Chromium was environment-blocked. Final successful run: `43750057224`, conclusion `success`, evidence recorded at `2026-11-15T19:02:42.435Z`.
+
+| Check | Result |
+|---|---|
+| `/api/health` | **200** `{"status":"ok"}` |
+| `/favicon.ico` | **200**, valid ICO magic, 13,008 bytes |
+| Invalid signup | **422** `VALIDATION_ERROR` |
+| Cross-origin signup | **403** `ORIGIN_REJECTED` |
+| Real production signup | **201**, user created, session cookie + CSRF token returned |
+| Session cookie flags | HttpOnly, Secure, SameSite=Lax, Path=/ |
+| Duplicate email | **409** `CONFLICT` |
+| Signup session | **200**, authenticated user matches signup |
+| Protected dashboard API | **200**, 6 starter agents |
+| Protected agents API | **200**, 6 agents |
+| Missing CSRF mutation | **403** `CSRF_REJECTED` |
+| CSRF-protected preferences mutation | **200** |
+| Unauthenticated protected API | **401** |
+| 3D scene | 1 canvas, concept label present, node interaction works |
+| Landing browser errors | none (page/console/failed responses) |
+| Dashboard auto-login | pass |
+| Refresh persistence | pass |
+| Protected `/connections` route | **200**, heading rendered |
+| Browser logout | pass |
+| Logout server revocation | old session no longer authenticates |
+| Browser login | **200** login API, dashboard rendered |
+| Login session cookie | HttpOnly, Secure, SameSite=Lax |
+| Authenticated browser page errors | none |
+
+Temporary verification account: `nexus-verification-1794769347996-40890189@example.com` (user id `1dc9f06c-98f9-4cde-acdc-66cb4a42a6d6`). The password was generated in the runner and never persisted. Temporary diagnostic/verification workflows and JSON evidence files were deleted after capture.
+
+### Current local gates after the fix
+
+- `npm run lint`: pass
+- `npm run typecheck`: pass
+- `npm test`: **57/57 pass**, 8 files (added managed PostgreSQL TLS/pool configuration tests)
+- `npm run db:migrate`: migrations 001–003 already applied locally
+- `npm run db:check`: 15 tables, 34 indexes, PostgreSQL 17.6
+- `npm run build`: pass, Next.js 16.4.6, 16 static pages
+- Local `npm run test:e2e`: **environment-blocked**, not an application pass. Sandbox glibc 2.36 cannot satisfy the available Chromium NSS/GLIBC symbol sets; browser coverage was moved to GitHub Actions production verification.
+
+### Remaining limitations
+
+- `NEXUS_DISABLE_WORKER=true` on Vercel: missions can be created/queued but the durable runner requires a separate always-on worker host. This is independent of the signup fix.
+- Live AI provider generation remains unverified without operator-supplied keys/models.
+- Supabase free-tier pooler/compute limits still apply; the app now uses transaction pooling and small per-instance pools.
+- The production deployment was verified at commit `8dc89da`; later documentation/cleanup commits do not change runtime application code.
+
 ## What was built
 
 ### Experience and interface
@@ -82,7 +159,7 @@ The following were executed in this workspace. Final gate run: 2026-11-14, 19:42
 | Browser/server log inspection | **DONE** | Fixed development-origin configuration, missing-key warnings, and a reduced-motion hydration mismatch; landing console/page-error assertion added |
 | Dedicated worker process | **PASS** | `npm run worker` started against PostgreSQL and was stopped cleanly; no web port required |
 | Docker/Compose execution | **NOT RUN** | No Docker daemon available; files are deployment preparation only |
-| Cloud deployment | **NOT RUN** | No cloud resources or paid services created |
+| Cloud deployment | **SUPERSEDED** | Original build did not create cloud resources; see the 2026-11-15 production signup incident addendum for the verified Vercel/Supabase deployment |
 
 ### Important defects found and fixed during verification
 
