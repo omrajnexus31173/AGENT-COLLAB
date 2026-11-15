@@ -1,0 +1,14 @@
+[
+  {
+    "host": "aws-0-us-east-1.pooler.supabase.com",
+    "error": "self-signed certificate in certificate chain"
+  },
+  {
+    "host": "aws-1-us-east-1.pooler.supabase.com",
+    "error": "self-signed certificate in certificate chain"
+  },
+  {
+    "host": "aws-2-us-east-1.pooler.supabase.com",
+    "error": "getaddrinfo ENOTFOUND aws-2-us-east-1.pooler.supabase.com"
+  }
+]
