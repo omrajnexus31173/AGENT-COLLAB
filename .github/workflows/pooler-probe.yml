@@ -1,0 +1,45 @@
+name: Temporary pooler probe
+on:
+  push:
+    branches: [arena/187a72ae-agent-collab]
+    paths: ['.github/workflows/pooler-probe.yml']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --no-fund --no-audit
+      - name: Probe pooler tenant routing without a password
+        run: |
+          node --input-type=module <<'NODE'
+          import net from 'node:net';
+          import tls from 'node:tls';
+          const ref='xguxwwztdswaapjkoafn';
+          const hosts=['aws-0-us-east-1.pooler.supabase.com','aws-1-us-east-1.pooler.supabase.com','aws-2-us-east-1.pooler.supabase.com'];
+          const results=[];
+          function startup(user){const params=Buffer.from(`user\0${user}\0database\0postgres\0\0`);const b=Buffer.alloc(8+params.length);b.writeInt32BE(b.length,0);b.writeInt32BE(196608,4);params.copy(b,8);return b;}
+          for(const host of hosts){
+            const result=await new Promise(resolve=>{
+              const sock=net.connect({host,port:5432,timeout:8000},()=>{const ssl=Buffer.alloc(8);ssl.writeInt32BE(8,0);ssl.writeInt32BE(80877103,4);sock.write(ssl);});
+              let stage='ssl';let buf=Buffer.alloc(0);
+              sock.on('data',d=>{buf=Buffer.concat([buf,d]);
+                if(stage==='ssl'){if(buf[0]!==83){resolve({host,error:'SSL rejected '+buf.toString('utf8',0,100)});sock.destroy();return;} buf=Buffer.alloc(0);stage='startup';const secure=tls.connect({socket:sock,servername:host,rejectUnauthorized:true},()=>{secure.write(startup(`postgres.${ref}`));});secure.on('data',x=>{const s=x.toString('utf8');const code=s[0];const msg=s.slice(5,300).replace(/\0/g,' ');resolve({host,responseType:code,message:msg});secure.destroy();});secure.on('error',e=>resolve({host,error:e.message}));return;}
+              });
+              sock.on('error',e=>resolve({host,error:e.message}));sock.on('timeout',()=>{resolve({host,error:'timeout'});sock.destroy();});
+            });
+            results.push(result);
+          }
+          const fs=await import('node:fs/promises');await fs.writeFile('pooler-probe.json',JSON.stringify(results,null,2));
+          console.log(JSON.stringify(results));
+          NODE
+      - name: Persist probe result
+        run: |
+          node --input-type=module <<'NODE'
+          const fs=await import('node:fs/promises');const content=(await fs.readFile('pooler-probe.json')).toString('base64');const url='https://api.github.com/repos/${{ github.repository }}/contents/pooler-probe.json';const headers={authorization:`Bearer ${{ github.token }}`,accept:'application/vnd.github+json','content-type':'application/json'};const existing=await fetch(url+'?ref=${{ github.ref_name }}',{headers});const sha=existing.ok?(await existing.json()).sha:undefined;const r=await fetch(url,{method:'PUT',headers,body:JSON.stringify({message:'Record pooler routing probe',content,branch:'${{ github.ref_name }}',...(sha?{sha}:{})})});if(!r.ok)throw new Error(r.status);
+          NODE
