@@ -118,9 +118,12 @@ try {
   await page.goto(base + '/login', { waitUntil: 'networkidle' });
   await page.getByLabel('Email address').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
+  const loginResponsePromise = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/auth/login' && r.request().method() === 'POST', { timeout: 20000 }).catch(() => null);
   await page.getByRole('button', { name: 'Enter your workspace', exact: true }).click();
-  await page.waitForURL(base + '/dashboard');
-  record('browser login', await page.getByRole('heading', { name: 'Welcome to the nexus.' }).isVisible());
+  const loginResponse = await loginResponsePromise;
+  await page.waitForURL(base + '/dashboard', { timeout: 20000 }).catch(() => {});
+  const loginHeading = await page.getByRole('heading', { name: 'Welcome to the nexus.' }).waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
+  record('browser login', loginHeading && page.url() === base + '/dashboard', { url: page.url(), apiStatus: loginResponse?.status(), headings: await page.locator('h1,h2').allTextContents(), pageErrors, consoleErrors, failedResponses }, false);
   const loginSession = await context.cookies();
   record('login session cookie', loginSession.some((c) => c.name === 'nexus.session' && c.httpOnly && c.secure && c.sameSite === 'Lax'));
   record('authenticated browser has no page errors', pageErrors.length === 0, { pageErrors });
