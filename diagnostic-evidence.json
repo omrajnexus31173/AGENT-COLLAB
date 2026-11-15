@@ -1,0 +1,1 @@
+{"path":"/api/auth/signup","method":"POST","status":403,"contentType":"application/json","requestId":"cle1::iad1::n2jcp-1794767537085-41ca36bc0696","server":"Vercel","setCookiePresent":false,"body":{"error":"This origin is not allowed. Check APP_ORIGIN.","code":"ORIGIN_REJECTED"}}
