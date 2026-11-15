@@ -1,9 +1,52 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
 import { isPublicAddress, validateEndpoint, safeRequest } from '@/lib/server/safe-http';
+import { assertOrigin, clientAddress } from '@/lib/server/http';
 import { signupSchema, missionSchema } from '@/lib/contracts';
 afterEach(() => {
   delete process.env.ALLOW_LOCAL_PROVIDERS;
   delete process.env.PROVIDER_ORIGIN_ALLOWLIST;
+  vi.unstubAllEnvs();
+});
+describe('production browser-origin and proxy boundaries', () => {
+  const request = (origin?: string, host = 'nexus-agent-collab.vercel.app') =>
+    new NextRequest(`https://${host}/api/auth/signup`, {
+      method: 'POST',
+      headers: { host, ...(origin === undefined ? {} : { origin }) },
+    });
+  it('fails closed when the canonical production origin is not configured', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('APP_ORIGIN', '');
+    expect(() => assertOrigin(request('https://nexus-agent-collab.vercel.app'))).toThrowError(
+      expect.objectContaining({ status: 403, code: 'ORIGIN_REJECTED' }),
+    );
+  });
+  it('accepts only the exact configured canonical origin in production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('APP_ORIGIN', 'https://nexus-agent-collab.vercel.app');
+    expect(() => assertOrigin(request('https://nexus-agent-collab.vercel.app'))).not.toThrow();
+    for (const origin of [
+      'https://attacker.example',
+      'https://nexus-agent-collab.vercel.app.attacker.example',
+      'http://nexus-agent-collab.vercel.app',
+      'null',
+    ])
+      expect(() => assertOrigin(request(origin)), origin).toThrowError(
+        expect.objectContaining({ status: 403, code: 'ORIGIN_REJECTED' }),
+      );
+    expect(() => assertOrigin(request(undefined, 'attacker.example'))).toThrowError(
+      expect.objectContaining({ status: 403 }),
+    );
+  });
+  it('does not trust a caller-supplied forwarded address unless the proxy is trusted', () => {
+    const req = new NextRequest('https://nexus-agent-collab.vercel.app/api/auth/signup', {
+      headers: { 'x-forwarded-for': '203.0.113.10, 198.51.100.2' },
+    });
+    vi.stubEnv('TRUST_PROXY', 'false');
+    expect(clientAddress(req)).toBe('direct');
+    vi.stubEnv('TRUST_PROXY', 'true');
+    expect(clientAddress(req)).toBe('203.0.113.10');
+  });
 });
 describe('SSRF and validation boundaries', () => {
   it('rejects private, loopback, metadata, reserved, and mapped addresses', () => {

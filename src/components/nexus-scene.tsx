@@ -82,6 +82,14 @@ function Sculpture({
 }) {
   const group = useRef<THREE.Group>(null);
   const core = useRef<THREE.Group>(null);
+  // THREE.Timer is available in the pinned Three.js r187. React Three Fiber
+  // 9.8.2 still creates its own internal Clock, so application animation no
+  // longer reads that deprecated API while remaining compatible with R3F.
+  const timer = useMemo(() => new THREE.Timer(), []);
+  useEffect(() => {
+    timer.connect(document);
+    return () => timer.dispose();
+  }, [timer]);
   const particles = useMemo(() => {
     const positions = new Float32Array((mobile ? 35 : 100) * 3);
     let seed = 42;
@@ -93,7 +101,8 @@ function Sculpture({
     return positions;
   }, [mobile]);
   useFrame((state, delta) => {
-    const d = Math.min(delta, 0.05);
+    timer.update();
+    const d = Math.min(timer.getDelta(), delta, 0.05);
     const outer = group.current;
     const inner = core.current;
     if (!outer || !inner) return;
@@ -101,7 +110,7 @@ function Sculpture({
     inner.rotation.x += d * 0.06;
     outer.rotation.y = THREE.MathUtils.damp(outer.rotation.y, mobile ? 0 : state.pointer.x * 0.16, 3, d);
     outer.rotation.x = THREE.MathUtils.damp(outer.rotation.x, mobile ? 0 : -state.pointer.y * 0.1, 3, d);
-    outer.position.y = Math.sin(state.clock.elapsedTime * 0.45) * 0.06;
+    outer.position.y = Math.sin(timer.getElapsed() * 0.45) * 0.06;
   });
   return (
     <>
