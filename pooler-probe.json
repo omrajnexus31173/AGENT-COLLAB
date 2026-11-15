@@ -1,11 +1,119 @@
 [
   {
     "host": "aws-0-us-east-1.pooler.supabase.com",
-    "error": "self-signed certificate in certificate chain"
+    "responseType": "E",
+    "message": "CXX000 M(ENOTFOUND) tenant/user postgres.xguxwwztdswaapjkoafn not found SFATAL  ",
+    "chain": [
+      {
+        "subject": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "*.pooler.supabase.com"
+        },
+        "issuer": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Intermediate 2021 CA"
+        },
+        "valid_to": "Mar 11 15:56:33 2030 GMT"
+      },
+      {
+        "subject": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Intermediate 2021 CA"
+        },
+        "issuer": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Root 2021 CA"
+        },
+        "valid_to": "Oct 21 07:53:45 2033 GMT"
+      },
+      {
+        "subject": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Root 2021 CA"
+        },
+        "issuer": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Root 2021 CA"
+        },
+        "valid_to": "Apr 26 10:56:53 2031 GMT"
+      }
+    ]
   },
   {
     "host": "aws-1-us-east-1.pooler.supabase.com",
-    "error": "self-signed certificate in certificate chain"
+    "responseType": "R",
+    "message": "   \nSCRAM-SHA-256  ",
+    "chain": [
+      {
+        "subject": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "*.pooler.supabase.com"
+        },
+        "issuer": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Intermediate 2021 CA"
+        },
+        "valid_to": "Mar 11 15:56:33 2030 GMT"
+      },
+      {
+        "subject": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Intermediate 2021 CA"
+        },
+        "issuer": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Root 2021 CA"
+        },
+        "valid_to": "Oct 21 07:53:45 2033 GMT"
+      },
+      {
+        "subject": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Root 2021 CA"
+        },
+        "issuer": {
+          "C": "US",
+          "ST": "Delware",
+          "L": "New Castle",
+          "O": "Supabase Inc",
+          "CN": "Supabase Root 2021 CA"
+        },
+        "valid_to": "Apr 26 10:56:53 2031 GMT"
+      }
+    ]
   },
   {
     "host": "aws-2-us-east-1.pooler.supabase.com",
