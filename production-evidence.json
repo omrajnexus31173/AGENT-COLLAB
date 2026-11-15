@@ -1,6 +1,6 @@
 {
   "base": "https://nexus-agent-collab.vercel.app",
-  "startedAt": "2026-11-15T18:46:24.542Z",
+  "startedAt": "2026-11-15T18:50:18.241Z",
   "checks": [
     {
       "name": "database health",
@@ -10,9 +10,9 @@
   ],
   "ok": false,
   "error": "database health",
-  "finishedAt": "2026-11-15T18:46:25.017Z",
+  "finishedAt": "2026-11-15T18:50:18.697Z",
   "testAccount": {
-    "email": "nexus-verification-1794768384542-8afc6988@example.com",
+    "email": "nexus-verification-1794768618241-4e476495@example.com",
     "userId": ""
   }
 }
