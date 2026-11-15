@@ -1,6 +1,6 @@
 {
   "base": "https://nexus-agent-collab.vercel.app",
-  "startedAt": "2026-11-15T18:57:24.058Z",
+  "startedAt": "2026-11-15T19:00:51.179Z",
   "checks": [
     {
       "name": "database health",
@@ -29,7 +29,7 @@
       "name": "real production signup",
       "ok": true,
       "status": 201,
-      "requestId": "cle1::iad1::ffkgb-1794769044896-df1c89420dfe",
+      "requestId": "iad1::iad1::n4h5l-1794769251874-975aa835a5db",
       "cookieFlags": {
         "httpOnly": true,
         "secure": true,
@@ -50,15 +50,87 @@
     },
     {
       "name": "protected dashboard API",
-      "ok": false,
-      "status": 500
+      "ok": true,
+      "status": 200,
+      "agents": 6
+    },
+    {
+      "name": "protected agents API",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "missing CSRF rejected",
+      "ok": true,
+      "status": 403,
+      "code": "CSRF_REJECTED"
+    },
+    {
+      "name": "CSRF-protected mutation",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "unauthenticated protected API rejected",
+      "ok": true,
+      "status": 401
+    },
+    {
+      "name": "3D scene renders",
+      "ok": true,
+      "canvasCount": 1,
+      "concept": "INTERACTIVE CONCEPT · NOT LIVE AGENT STATUS"
+    },
+    {
+      "name": "3D node interaction",
+      "ok": true
+    },
+    {
+      "name": "landing has no browser errors",
+      "ok": true,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedResponses": []
+    },
+    {
+      "name": "browser dashboard auto-login",
+      "ok": true
+    },
+    {
+      "name": "browser refresh persistence",
+      "ok": true
+    },
+    {
+      "name": "protected browser route",
+      "ok": true,
+      "url": "https://nexus-agent-collab.vercel.app/connections",
+      "status": 200,
+      "headings": [
+        "Connection center",
+        "Connect a provider",
+        "Disconnect provider?"
+      ],
+      "failedResponses": []
+    },
+    {
+      "name": "browser logout",
+      "ok": true
+    },
+    {
+      "name": "logout revokes server session",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "browser login",
+      "ok": false
     }
   ],
   "ok": false,
-  "error": "protected dashboard API",
-  "finishedAt": "2026-11-15T18:57:26.880Z",
+  "error": "browser login",
+  "finishedAt": "2026-11-15T19:01:08.349Z",
   "testAccount": {
-    "email": "nexus-verification-1794769044058-e7f43308@example.com",
-    "userId": "947f06b7-f1b2-4c9c-a696-983e5602bc7b"
+    "email": "nexus-verification-1794769251179-d766f9d0@example.com",
+    "userId": "f9339dd0-8313-4f0d-9b0b-1eb8e28423b1"
   }
 }
